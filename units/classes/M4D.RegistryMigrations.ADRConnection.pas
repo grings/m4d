@@ -96,13 +96,23 @@ procedure TM4DMigrationsHistoryADRConnection.CreateTableMigrations;
 var
   LSql: string;
 begin
-  LSql := Format('create table if not exists %s (', [FTableName]) +
-    'SEQUENCE INT PRIMARY KEY NOT NULL, ' +
-    'VERSION VARCHAR(255), ' +
-    'DATETIME :DATETIME, ' +
-    'START_OF_EXECUTION :DATETIME, ' +
-    'END_OF_EXECUTION :DATETIME, ' +
-    'DURATION_OF_EXECUTION INTEGER) ';
+  if FConnection.Params.Driver = adrMSSQL then
+    LSql := Format('if not exists (select * from sysobjects where name=%s and xtype=''U'') ', [FTableName.QuotedString]) +
+      Format('create table %s (', [FTableName]) +
+      'SEQUENCE INT PRIMARY KEY NOT NULL, ' +
+      'VERSION VARCHAR(255), ' +
+      'DATETIME :DATETIME, ' +
+      'START_OF_EXECUTION :DATETIME, ' +
+      'END_OF_EXECUTION :DATETIME, ' +
+      'DURATION_OF_EXECUTION INTEGER) '
+  else
+    LSql := Format('create table if not exists %s (', [FTableName]) +
+      'SEQUENCE INT PRIMARY KEY NOT NULL, ' +
+      'VERSION VARCHAR(255), ' +
+      'DATETIME :DATETIME, ' +
+      'START_OF_EXECUTION :DATETIME, ' +
+      'END_OF_EXECUTION :DATETIME, ' +
+      'DURATION_OF_EXECUTION INTEGER) ';
   LSql := LSql.Replace(':DATETIME', DateTimeType);
   FQuery.SQL(LSql).ExecSQL;
 end;

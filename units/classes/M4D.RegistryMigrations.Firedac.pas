@@ -101,13 +101,23 @@ var
   LSql: string;
 begin
   FQuery.Close;
-  LSql := Format('create table if not exists %s (', [FTableName]) +
-    'SEQUENCE INT PRIMARY KEY NOT NULL, ' +
-    'VERSION VARCHAR(255), ' +
-    'DATETIME :DATETIME, ' +
-    'START_OF_EXECUTION :DATETIME, ' +
-    'END_OF_EXECUTION :DATETIME, ' +
-    'DURATION_OF_EXECUTION INTEGER) ';
+  if FQuery.Connection.DriverName.ToUpper = 'MSSQL' then
+    LSql := Format('if not exists (select * from sysobjects where name=%s and xtype=''U'') ', [FTableName.QuotedString]) +
+      Format('create table %s (', [FTableName]) +
+      'SEQUENCE INT PRIMARY KEY NOT NULL, ' +
+      'VERSION VARCHAR(255), ' +
+      'DATETIME :DATETIME, ' +
+      'START_OF_EXECUTION :DATETIME, ' +
+      'END_OF_EXECUTION :DATETIME, ' +
+      'DURATION_OF_EXECUTION INTEGER) '
+  else
+    LSql := Format('create table if not exists %s (', [FTableName]) +
+      'SEQUENCE INT PRIMARY KEY NOT NULL, ' +
+      'VERSION VARCHAR(255), ' +
+      'DATETIME :DATETIME, ' +
+      'START_OF_EXECUTION :DATETIME, ' +
+      'END_OF_EXECUTION :DATETIME, ' +
+      'DURATION_OF_EXECUTION INTEGER) ';
   LSql := LSql.Replace(':DATETIME', DateTimeType);
   FQuery.SQL.Text := LSql;
   FQuery.ExecSQL;
